@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Commander des Consoles</title>
+    <link rel="icon" type="image/x-icon" href="img/icon.png"/>
+    <link href="bootstrap-5.3.2-dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <style>
+      .t2 {
+        margin-bottom: 30px;
+      }
+
+      th {
+        padding: 10px;
+        text-align: left;
+        border-radius: 4px;
+        border-bottom: 1px solid #ddd;
+      }
+
+      th:nth-child(1),
+      th:nth-child(3) {
+        background-color: #ffffff;
+      }
+
+      th:nth-child(2),
+      th:nth-child(4) {
+        background-color: #dc3546e3;
+        color: #ffffff;
+      }
+
+      #totalHT {
+        margin-left: 656px;
+      }
+      #totalTTC {
+        margin-left: 650px;
+      }
+      .product-image {
+        width: 50px;
+        height: 50px;
+      }
+      input,
+      select {
+        margin-left: 20px;
+        width: 250px;
+        height: 40px;
+        border: none;
+        border-radius: 5px;
+      }
+      button {
+        margin-left: 50px;
+        padding: 10px 20px;
+        background-color: #3498db;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        transition: all 0.3 ease;
+      }
+      .b {
+        margin-top: 10px;
+      }
+      .b:hover {
+        box-shadow: 5px 5px 7px rgba(74, 74, 74, 0.9);
+      }
+    </style>
+  </head>
+  <body class="bg-light">
+    <div class="container mt-5">
+      <div class="card">
+        <h2 class="t1 card-header">Commander des Consoles</h2>
+        <div class="card-body">
+          <form id="orderForm">
+            <div class="mb-3">
+              <label for="consoleSelect" class="form-label"><strong>Console :</strong></label><br/>
+              <select id="consoleSelect" class="" name="console">
+                <option value="" selected disabled>Choisir Une Console</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="quantity" class="form-label"><strong>Quantité :</strong></label><br/>
+              <input type="number" id="quantity" class="" name="quantity" min="1"/>
+            </div>
+            <button type="button" class="b btn btn-danger" onclick="validateAndAddToCart()">Ajouter au panier</button>
+          </form>
+          <h2 class="t2 mt-4">Panier de commande</h2>
+          <table id="cartTable" class="table mt-3">
+            <thead>
+              <tr>
+                <th>REFERENCE</th>
+                <th>QUANTITE</th>
+                <th>IMAGE</th>
+                <th>ACTION</th>
+              </tr>
+            </thead>
+            <tbody>
+                
+            </tbody>
+          </table>
+          <div class="total">
+            Total HT : <span id="totalHT">0</span> DHS <br/>
+            Total TTC : <span id="totalTTC">0</span> DHS <br/>
+          </div>
+          <button class="b btn btn-danger" onclick="Commande()">Commander</button>
+        </div>
+      </div>
+    </div>
+    <script src="bootstrap-5.3.2-dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+
+      let jsonData = {
+        consoles: [
+          {
+            ref: "NINTENDO SWITCH OLED",
+            prix: 4500,
+            manettes: 2,
+            image: "img/nintendo.jpg",
+          },
+          {
+            ref: "PLAYSTATION CONSOLE PS5",
+            prix: 8500,
+            manettes: 1,
+            image: "img/ps5.jpg",
+          },
+          {
+            ref: "XBOX SERIES 512G",
+            prix: 4600,
+            manettes: 2,
+            image: "img/xbox.jpg",
+          },
+          {
+            ref: "PLAYSTATION PS4 1TO PRO",
+            prix: 5300,
+            manettes: 1,
+            image: "img/ps4.jpg",
+          },
+        ],
+      };
+
+      function fillConsoleDropdown() {
+        let consoleSelect = document.getElementById("consoleSelect");
+        let dropdownHTML =
+          "<option value='' disabled selected>Choisir Une Console</option>";
+        for (let i = 0; i < jsonData.consoles.length; i++) {
+          dropdownHTML += `<option value="${jsonData.consoles[i].ref}">${jsonData.consoles[i].ref}</option>`;
+        }
+        consoleSelect.innerHTML = dropdownHTML;
+      }
+
+      function validateAndAddToCart() {
+        let consoleSelect = document.getElementById("consoleSelect");
+        let quantity = document.getElementById("quantity").value;
+        if (consoleSelect.value === "") {
+          alert("Veuillez sélectionner une console.");
+          return;
+        }
+        if (quantity < 1 || quantity > 20) {
+          alert("La quantité doit être comprise entre 1 et 20.");
+          return;
+        }
+        addConsoletoCart();
+      }
+
+      function addConsoletoCart() {
+        let consoleSelect = document.getElementById("consoleSelect");
+        let quantity = parseInt(document.getElementById("quantity").value);
+        let selectedConsole = consoleSelect.options[consoleSelect.selectedIndex].text;
+        let selectedConsoleData = jsonData.consoles.find(function(console) {
+          return console.ref === selectedConsole;
+        }
+        );
+        if (!selectedConsoleData) {
+          alert("Impossible de trouver les informations de la console sélectionnée.");
+          return;
+        }
+        let totalPrice = selectedConsoleData.prix * quantity;
+        let table = document.getElementById("cartTable").getElementsByTagName("tbody")[0];
+        let newRow = table.insertRow(table.rows.length);
+        newRow.innerHTML = `
+      <td>${selectedConsole}</td>
+      <td>${quantity}</td>
+      <td><img src="${selectedConsoleData.image}" alt="${selectedConsole}" class="product-image img-thumbnail"></td>
+      <td><button type="button" class="btn btn-danger" onclick="deleteConsoleFromCart(this)">Supprimer</button></td>`;
+        updateTotal();
+      }
+
+      function deleteConsoleFromCart(button) {
+        let row = button.parentNode.parentNode;
+        let consoleName = row.getElementsByTagName("td")[0].innerText;
+        if (confirm("Êtes-vous sûr de vouloir supprimer la console '" + consoleName + "' du panier ?")) {
+          row.parentNode.removeChild(row);
+          updateTotal();
+        }
+      }
+
+      function updateTotal() {
+        let rows = document.getElementById("cartTable").getElementsByTagName("tbody")[0].getElementsByTagName("tr");
+        let totalHT = 0;
+        for (let i = 0; i < rows.length; i++) {
+          let quantity = parseInt(rows[i].getElementsByTagName("td")[1].innerText);
+          let consoleName = rows[i].getElementsByTagName("td")[0].innerText;
+          let consolePrice = jsonData.consoles.find(function (console) {
+            return console.ref === consoleName;
+          }).prix;
+          totalHT += quantity * consolePrice;
+          }
+          let totalTTC = totalHT * 1.2;
+        document.getElementById("totalHT").textContent = formatTotal(totalHT);
+        document.getElementById("totalTTC").textContent = formatTotal(totalTTC);
+      }
+
+      function formatTotal(total) {
+        if (total % 1 === 0) {
+          return total.toFixed(0);
+        } else {
+          return total.toFixed(2);
+        }
+      }
+
+      function Commande() {
+        let cartTable = document.getElementById("cartTable").getElementsByTagName("tbody")[0];
+        if (cartTable.rows.length === 0) {
+          alert("Veuillez choisir une console avant de commander.");
+        } else {
+          if (confirm("Êtes-vous sûr de vouloir passer cette commande ?")) {
+            alert("Votre commande a été passée avec succès !");
+            location.reload();
+          } else {
+            alert("Commande annulée.");
+          }
+        }
+      }
+
+      fillConsoleDropdown();
+    </script>
+  </body>
+</html>
